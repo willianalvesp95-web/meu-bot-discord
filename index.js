@@ -18,8 +18,8 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
-// 🔥 PRODUTOS (LOJA)
-const produtos = require("./data/products.json");
+// 🔥 PRODUTOS (RAIZ DO PROJETO)
+const produtos = require("./products.json");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -35,9 +35,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
 
-    // =========================
+    // ======================
     // SLASH COMMANDS
-    // =========================
+    // ======================
     if (interaction.isChatInputCommand()) {
 
       // 🎫 TICKET PAINEL
@@ -86,9 +86,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
     }
 
-    // =========================
+    // ======================
     // BOTÕES
-    // =========================
+    // ======================
     if (interaction.isButton()) {
 
       if (!interaction.guild) return;
