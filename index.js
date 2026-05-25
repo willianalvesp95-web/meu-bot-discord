@@ -1,5 +1,4 @@
-process.on("unhandledRejection", console.error);
-process.on("uncaughtException", console.error);
+const fs = require("fs");
 
 const {
   Client,
@@ -15,134 +14,146 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
+// 🔥 COLOCA SEU ID AQUI
+const ADMIN_ID = "SEU_ID_AQUI";
+
+// carrega produtos
+let produtos = require("./products.json");
+
+// salvar produtos no JSON
+function salvarProdutos() {
+  fs.writeFileSync("./products.json", JSON.stringify(produtos, null, 2));
+}
+
 client.once("ready", () => {
   console.log(`Bot ligado: ${client.user.tag}`);
 });
 
-// =========================
+// ======================
 // INTERAÇÕES
-// =========================
+// ======================
 client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
 
-    // =========================
-    // COMANDO /LOJA (PAINEL)
-    // =========================
+    // ======================
+    // /PAINEL (ADMIN)
+    // ======================
     if (interaction.isChatInputCommand()) {
 
-      if (interaction.commandName === "loja") {
+      if (interaction.commandName === "painel") {
+
+        if (interaction.user.id !== ADMIN_ID) {
+          return interaction.reply({
+            content: "❌ Sem permissão.",
+            ephemeral: true
+          });
+        }
 
         const embed = new EmbedBuilder()
-          .setTitle("🛒 Loja teste")
-          .setDescription("Escolha um produto abaixo:")
-          .setColor(0x00AEFF);
+          .setTitle("🛠 Painel da Loja")
+          .setDescription("Clique para adicionar produtos")
+          .setColor(0xff0000);
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("teste")
-            .setLabel("VIP - R$1")
+            .setCustomId("add_teste")
+            .setLabel("Adicionar teste")
             .setStyle(ButtonStyle.Primary),
 
           new ButtonBuilder()
-            .setCustomId("teste2")
-            .setLabel(" - R$1")
+            .setCustomId("add_teste2")
+            .setLabel("Adicionar teste2")
             .setStyle(ButtonStyle.Secondary)
         );
 
         return interaction.reply({
           embeds: [embed],
-          components: [row]
+          components: [row],
+          ephemeral: true
+        });
+      }
+
+      // ======================
+      // /LOJA
+      // ======================
+      if (interaction.commandName === "loja") {
+
+        let lista = produtos.produtos
+          .map(p => `🛒 **${p.nome}** - R$${p.preco}`)
+          .join("\n");
+
+        if (!lista) lista = "Nenhum produto na loja.";
+
+        return interaction.reply({
+          content: `📦 **LOJA:**\n\n${lista}`
         });
       }
     }
 
-    // =========================
+    // ======================
     // BOTÕES
-    // =========================
+    // ======================
     if (interaction.isButton()) {
 
-      // VIP
-      if (interaction.customId === "buy_teste") {
-
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("teste")
-            .setLabel("Já paguei")
-            .setStyle(ButtonStyle.Success)
-        );
-
+      // só admin pode usar painel
+      if (interaction.user.id !== ADMIN_ID) {
         return interaction.reply({
-          content:
-`💰 PIX COPIA E COLA (VIP)
-
-00020126580014BR.GOV.BCB.PIX-SEUPIXAQUI
-
-💡 Valor: R$1
-
-Após pagar, clique abaixo:`,
-          components: [row],
+          content: "❌ Sem permissão.",
           ephemeral: true
         });
       }
 
-      // COINS
-      if (interaction.customId === "buy_teste2") {
+      // ======================
+      // ADD VIP
+      // ======================
+      if (interaction.customId === "add_teste") {
 
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("teste2")
-            .setLabel("Já paguei")
-            .setStyle(ButtonStyle.Success)
-        );
+        produtos.produtos.push({
+          id: "teste",
+          nome: "teste",
+          preco: 1
+        });
+
+        salvarProdutos();
 
         return interaction.reply({
-          content:
-`💰 PIX COPIA E COLA (teste2)
-
-00020126580014BR.GOV.BCB.PIX-SEUPIXAQUI
-
-💡 Valor: R$1
-
-Após pagar, clique abaixo:`,
-          components: [row],
+          content: "✅ teste adicionado na loja!",
           ephemeral: true
         });
       }
 
-      // =========================
-      // JÁ PAGUEI teste
-      // =========================
-      if (interaction.customId === "paid_teste") {
-        return interaction.reply({
-          content: "⏳ Pagamento teste2 enviado! Aguarde a liberação manual.",
-          ephemeral: true
-        });
-      }
+      // ======================
+      // ADD COINS
+      // ======================
+      if (interaction.customId === "add_teste2") {
 
-      // =========================
-      // JÁ PAGUEI teste2
-      // =========================
-      if (interaction.customId === "teste2") {
+        produtos.produtos.push({
+          id: "teste",
+          nome: "teste2",
+          preco: 1
+        });
+
+        salvarProdutos();
+
         return interaction.reply({
-          content: "⏳ Pagamento de teste2 enviado! Aguarde a liberação manual.",
+          content: "✅ teste2 adicionados na loja!",
           ephemeral: true
         });
       }
     }
 
   } catch (err) {
-    console.error("ERRO:", err);
+    console.error(err);
 
     if (!interaction.replied) {
       interaction.reply({
         content: "❌ Erro no sistema.",
         ephemeral: true
-      }).catch(() => {});
+      });
     }
   }
 
 });
 
-// LOGIN
 client.login(process.env.DISCORD_TOKEN);
