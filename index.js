@@ -14,10 +14,10 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// 🔥 COLOCA SEU ID AQUI
-const ADMIN_ID = "SEU_ID_AQUI";
+// 🔥 SEU ID JÁ COLOCADO
+const ADMIN_ID = "1408931267747123303";
 
-// carrega produtos
+// carregar produtos
 let produtos = require("./products.json");
 
 // salvar produtos no JSON
@@ -38,7 +38,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     // ======================
     // /PAINEL (ADMIN)
-    // ======================
+// ======================
     if (interaction.isChatInputCommand()) {
 
       if (interaction.commandName === "painel") {
@@ -52,7 +52,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const embed = new EmbedBuilder()
           .setTitle("🛠 Painel da Loja")
-          .setDescription("Clique para adicionar produtos")
+          .setDescription("Adicionar produtos na loja")
           .setColor(0xff0000);
 
         const row = new ActionRowBuilder().addComponents(
@@ -96,7 +96,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // ======================
     if (interaction.isButton()) {
 
-      // só admin pode usar painel
+      // proteção admin
       if (interaction.user.id !== ADMIN_ID) {
         return interaction.reply({
           content: "❌ Sem permissão.",
@@ -104,9 +104,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // ======================
-      // ADD VIP
-      // ======================
+      // VIP
       if (interaction.customId === "add_teste") {
 
         produtos.produtos.push({
@@ -123,13 +121,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // ======================
-      // ADD COINS
-      // ======================
-      if (interaction.customId === "add_teste2") {
+      // COINS
+      if (interaction.customId === "add_coin") {
 
         produtos.produtos.push({
-          id: "teste",
+          id: "teste2",
           nome: "teste2",
           preco: 1
         });
