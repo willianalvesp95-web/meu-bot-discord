@@ -1,146 +1,133 @@
-process.on("unhandledRejection", (error) => {
-  console.error("UNHANDLED REJECTION:", error);
-});
-
-process.on("uncaughtException", (error) => {
-  console.error("UNCAUGHT EXCEPTION:", error);
-});
+process.on("unhandledRejection", console.error);
+process.on("uncaughtException", console.error);
 
 const {
   Client,
   GatewayIntentBits,
   Events,
-  ChannelType,
-  PermissionsBitField,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder
 } = require("discord.js");
 
-// 🔥 PRODUTOS (RAIZ DO PROJETO)
-const produtos = require("./products.json");
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// BOT ONLINE
 client.once("ready", () => {
   console.log(`Bot ligado: ${client.user.tag}`);
 });
 
+// =========================
 // INTERAÇÕES
+// =========================
 client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
 
-    // ======================
-    // SLASH COMMANDS
-    // ======================
+    // =========================
+    // COMANDO /LOJA (PAINEL)
+    // =========================
     if (interaction.isChatInputCommand()) {
 
-      // 🎫 TICKET PAINEL
-      if (interaction.commandName === "ticket") {
+      if (interaction.commandName === "loja") {
 
         const embed = new EmbedBuilder()
-          .setTitle("🎫 Central de Tickets")
-          .setDescription("Clique no botão abaixo para abrir seu ticket.")
+          .setTitle("🛒 Loja teste")
+          .setDescription("Escolha um produto abaixo:")
           .setColor(0x00AEFF);
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("open_ticket")
-            .setLabel("Abrir Ticket")
-            .setStyle(ButtonStyle.Primary)
+            .setCustomId("teste")
+            .setLabel("VIP - R$1")
+            .setStyle(ButtonStyle.Primary),
+
+          new ButtonBuilder()
+            .setCustomId("teste2")
+            .setLabel(" - R$1")
+            .setStyle(ButtonStyle.Secondary)
         );
 
         return interaction.reply({
           embeds: [embed],
-          components: [row],
-          ephemeral: false
+          components: [row]
         });
-      }
-
-      // 🛒 LOJA
-      if (interaction.commandName === "loja") {
-
-        let lista = produtos.produtos
-          .map(p => `🛒 **${p.nome}** - R$${p.preco}`)
-          .join("\n");
-
-        return interaction.reply({
-          content: `📦 **LOJA:**\n\n${lista}`,
-          ephemeral: false
-        });
-      }
-
-      // 💰 COMPRA SIMPLES
-      if (interaction.commandName === "comprar") {
-
-        const item = produtos.produtos[0];
-
-        return interaction.reply(
-          `💰 Você comprou **${item.nome}** por R$${item.preco}`
-        );
       }
     }
 
-    // ======================
+    // =========================
     // BOTÕES
-    // ======================
+    // =========================
     if (interaction.isButton()) {
 
-      if (!interaction.guild) return;
+      // VIP
+      if (interaction.customId === "buy_teste") {
 
-      // 🎫 ABRIR TICKET
-      if (interaction.customId === "open_ticket") {
-
-        const channel = await interaction.guild.channels.create({
-          name: `ticket-${interaction.user.username}`,
-          type: ChannelType.GuildText,
-          permissionOverwrites: [
-            {
-              id: interaction.guild.id,
-              deny: [PermissionsBitField.Flags.ViewChannel]
-            },
-            {
-              id: interaction.user.id,
-              allow: [
-                PermissionsBitField.Flags.ViewChannel,
-                PermissionsBitField.Flags.SendMessages,
-                PermissionsBitField.Flags.ReadMessageHistory
-              ]
-            }
-          ]
-        });
-
-        const closeRow = new ActionRowBuilder().addComponents(
+        const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("close_ticket")
-            .setLabel("Fechar Ticket")
-            .setStyle(ButtonStyle.Danger)
+            .setCustomId("teste")
+            .setLabel("Já paguei")
+            .setStyle(ButtonStyle.Success)
         );
 
-        await channel.send({
-          content: `🎫 Ticket aberto por ${interaction.user}`,
-          components: [closeRow]
-        });
-
         return interaction.reply({
-          content: `✅ Ticket criado: ${channel}`,
+          content:
+`💰 PIX COPIA E COLA (VIP)
+
+00020126580014BR.GOV.BCB.PIX-SEUPIXAQUI
+
+💡 Valor: R$1
+
+Após pagar, clique abaixo:`,
+          components: [row],
           ephemeral: true
         });
       }
 
-      // 🔒 FECHAR TICKET
-      if (interaction.customId === "close_ticket") {
+      // COINS
+      if (interaction.customId === "buy_teste2") {
 
-        await interaction.reply("🔒 Fechando ticket...");
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("teste2")
+            .setLabel("Já paguei")
+            .setStyle(ButtonStyle.Success)
+        );
 
-        setTimeout(() => {
-          if (interaction.channel) interaction.channel.delete();
-        }, 2000);
+        return interaction.reply({
+          content:
+`💰 PIX COPIA E COLA (teste2)
+
+00020126580014BR.GOV.BCB.PIX-SEUPIXAQUI
+
+💡 Valor: R$1
+
+Após pagar, clique abaixo:`,
+          components: [row],
+          ephemeral: true
+        });
+      }
+
+      // =========================
+      // JÁ PAGUEI teste
+      // =========================
+      if (interaction.customId === "paid_teste") {
+        return interaction.reply({
+          content: "⏳ Pagamento teste2 enviado! Aguarde a liberação manual.",
+          ephemeral: true
+        });
+      }
+
+      // =========================
+      // JÁ PAGUEI teste2
+      // =========================
+      if (interaction.customId === "teste2") {
+        return interaction.reply({
+          content: "⏳ Pagamento de teste2 enviado! Aguarde a liberação manual.",
+          ephemeral: true
+        });
       }
     }
 
@@ -148,8 +135,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.error("ERRO:", err);
 
     if (!interaction.replied) {
-      await interaction.reply({
-        content: "❌ Ocorreu um erro no sistema.",
+      interaction.reply({
+        content: "❌ Erro no sistema.",
         ephemeral: true
       }).catch(() => {});
     }
