@@ -7,26 +7,66 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder
+  EmbedBuilder,
+  REST,
+  Routes,
+  SlashCommandBuilder
 } = require("discord.js");
 
+// ======================
+// CONFIG
+// ======================
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// 🔥 SEU ID JÁ COLOCADO
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+
+// 🔥 SEU ID (admin)
 const ADMIN_ID = "1408931267747123303";
 
-// carregar produtos
+// ======================
+// PRODUTOS
+// ======================
 let produtos = require("./products.json");
 
-// salvar produtos no JSON
 function salvarProdutos() {
   fs.writeFileSync("./products.json", JSON.stringify(produtos, null, 2));
 }
 
+// ======================
+// REGISTRAR COMANDOS (AUTO)
+// ======================
+const commands = [
+  new SlashCommandBuilder()
+    .setName("painel")
+    .setDescription("Painel admin"),
+
+  new SlashCommandBuilder()
+    .setName("loja")
+    .setDescription("Ver loja")
+].map(c => c.toJSON());
+
+const rest = new REST({ version: "10" }).setToken(TOKEN);
+
+(async () => {
+  try {
+    await rest.put(
+      Routes.applicationCommands(CLIENT_ID),
+      { body: commands }
+    );
+    console.log("✅ Comandos registrados!");
+  } catch (err) {
+    console.error(err);
+  }
+})();
+
+// ======================
+// BOT LIGOU
+// ======================
 client.once("ready", () => {
-  console.log(`Bot ligado: ${client.user.tag}`);
+  console.log(`🤖 Bot ligado: ${client.user.tag}`);
 });
 
 // ======================
@@ -37,10 +77,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
 
     // ======================
-    // /PAINEL (ADMIN)
-// ======================
+    // SLASH COMMANDS
+    // ======================
     if (interaction.isChatInputCommand()) {
 
+      // 🛠 PAINEL ADMIN
       if (interaction.commandName === "painel") {
 
         if (interaction.user.id !== ADMIN_ID) {
@@ -57,13 +98,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("add_teste")
-            .setLabel("Adicionar teste")
+            .setCustomId("add_vip")
+            .setLabel("Adicionar VIP")
             .setStyle(ButtonStyle.Primary),
 
           new ButtonBuilder()
-            .setCustomId("add_teste2")
-            .setLabel("Adicionar teste2")
+            .setCustomId("add_coin")
+            .setLabel("Adicionar Coins")
             .setStyle(ButtonStyle.Secondary)
         );
 
@@ -74,9 +115,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // ======================
-      // /LOJA
-      // ======================
+      // 🛒 LOJA
       if (interaction.commandName === "loja") {
 
         let lista = produtos.produtos
@@ -96,7 +135,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // ======================
     if (interaction.isButton()) {
 
-      // proteção admin
       if (interaction.user.id !== ADMIN_ID) {
         return interaction.reply({
           content: "❌ Sem permissão.",
@@ -105,18 +143,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       // VIP
-      if (interaction.customId === "add_teste") {
+      if (interaction.customId === "add_vip") {
 
         produtos.produtos.push({
-          id: "teste",
-          nome: "teste",
-          preco: 1
+          id: "vip",
+          nome: "VIP Premium",
+          preco: 10
         });
 
         salvarProdutos();
 
         return interaction.reply({
-          content: "✅ teste adicionado na loja!",
+          content: "✅ VIP adicionado!",
           ephemeral: true
         });
       }
@@ -125,15 +163,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (interaction.customId === "add_coin") {
 
         produtos.produtos.push({
-          id: "teste2",
-          nome: "teste2",
-          preco: 1
+          id: "coin",
+          nome: "1000 Coins",
+          preco: 5
         });
 
         salvarProdutos();
 
         return interaction.reply({
-          content: "✅ teste2 adicionados na loja!",
+          content: "✅ Coins adicionados!",
           ephemeral: true
         });
       }
@@ -152,4 +190,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// ======================
+// LOGIN
+// ======================
+client.login(TOKEN);
