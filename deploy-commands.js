@@ -3,11 +3,11 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 const commands = [
   new SlashCommandBuilder()
     .setName("ticket")
-    .setDescription("Abrir ticket"),
+    .setDescription("Abrir painel de ticket"),
 
   new SlashCommandBuilder()
     .setName("comprar")
-    .setDescription("Ver loja")
+    .setDescription("Abrir loja")
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
