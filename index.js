@@ -113,4 +113,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 });
 
-client.login(process.env.DISCORD_TOKEN);
+if (!process.env.DISCORD_TOKEN) {
+  console.error("TOKEN NÃO DEFINIDO");
+} else {
+  client.login(process.env.DISCORD_TOKEN);
+}
