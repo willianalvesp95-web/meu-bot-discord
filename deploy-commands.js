@@ -2,31 +2,21 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 
 const commands = [
   new SlashCommandBuilder()
-    .setName("ticket")
-    .setDescription("Abrir painel de ticket"),
+    .setName("painel")
+    .setDescription("Painel admin"),
 
   new SlashCommandBuilder()
     .setName("loja")
-    .setDescription("Ver loja"),
-
-  new SlashCommandBuilder()
-    .setName("comprar")
-    .setDescription("Comprar item")
-].map(cmd => cmd.toJSON());
+    .setDescription("Ver loja")
+].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
-  try {
-    console.log("Registrando comandos...");
+  await rest.put(
+    Routes.applicationCommands(process.env.CLIENT_ID),
+    { body: commands }
+  );
 
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-
-    console.log("Comandos registrados!");
-  } catch (err) {
-    console.error(err);
-  }
+  console.log("Comandos registrados!");
 })();
