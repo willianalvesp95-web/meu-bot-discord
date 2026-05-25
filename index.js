@@ -1,71 +1,109 @@
-const { 
-  Client, 
-  GatewayIntentBits, 
-  Events 
+const {
+  Client,
+  GatewayIntentBits,
+  Events,
+  ChannelType,
+  PermissionsBitField,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
 } = require("discord.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// BOT LIGANDO
 client.once("ready", () => {
   console.log(`Bot ligado: ${client.user.tag}`);
 });
 
-// COMANDOS
+// INTERAÇÕES
 client.on(Events.InteractionCreate, async (interaction) => {
 
-  if (!interaction.isChatInputCommand()) return;
-
-  try {
+  // /ticket → painel
+  if (interaction.isChatInputCommand()) {
 
     if (interaction.commandName === "ticket") {
-      return await interaction.reply("🎫 Ticket criado!");
+
+      const embed = new EmbedBuilder()
+        .setTitle("🎫 Central de Tickets")
+        .setDescription("Clique no botão abaixo para abrir seu ticket.")
+        .setColor(0x00AEFF);
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("open_ticket")
+          .setLabel("Abrir Ticket")
+          .setStyle(ButtonStyle.Primary)
+      );
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [row],
+        ephemeral: false
+      });
     }
 
     if (interaction.commandName === "comprar") {
-      return await interaction.reply("💰 Loja aberta!");
+      return interaction.reply("💰 Loja aberta!");
+    }
+  }
+
+  // BOTÕES
+  if (interaction.isButton()) {
+
+    // abrir ticket
+    if (interaction.customId === "open_ticket") {
+
+      const channel = await interaction.guild.channels.create({
+        name: `ticket-${interaction.user.username}`,
+        type: ChannelType.GuildText,
+        permissionOverwrites: [
+          {
+            id: interaction.guild.id,
+            deny: [PermissionsBitField.Flags.ViewChannel]
+          },
+          {
+            id: interaction.user.id,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory
+            ]
+          }
+        ]
+      });
+
+      const closeRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("close_ticket")
+          .setLabel("Fechar Ticket")
+          .setStyle(ButtonStyle.Danger)
+      );
+
+      await channel.send({
+        content: `🎫 Ticket aberto por ${interaction.user}`,
+        components: [closeRow]
+      });
+
+      return interaction.reply({
+        content: `✅ Ticket criado: ${channel}`,
+        ephemeral: true
+      });
     }
 
-  } catch (err) {
-    console.error(err);
+    // fechar ticket
+    if (interaction.customId === "close_ticket") {
 
-    if (interaction.replied || interaction.deferred) return;
+      await interaction.reply("🔒 Fechando ticket...");
 
-    await interaction.reply({
-      content: "❌ Erro ao executar o comando.",
-      ephemeral: true
-    });
+      setTimeout(() => {
+        interaction.channel.delete();
+      }, 2000);
+    }
   }
 
 });
-const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName("ticket")
-    .setDescription("Abrir ticket"),
-
-  new SlashCommandBuilder()
-    .setName("comprar")
-    .setDescription("Ver loja")
-].map(cmd => cmd.toJSON());
-
-const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
-
-client.once("ready", async () => {
-  console.log(`Bot ligado: ${client.user.tag}`);
-
-  try {
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-
-    console.log("Comandos registrados!");
-  } catch (err) {
-    console.error(err);
-  }
-});
 client.login(process.env.DISCORD_TOKEN);
