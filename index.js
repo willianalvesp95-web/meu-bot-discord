@@ -18,7 +18,8 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
-const produtos = require("./productos.json");
+// 🔥 PRODUTOS (LOJA)
+const produtos = require("./data/products.json");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -34,10 +35,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
 
+    // =========================
     // SLASH COMMANDS
+    // =========================
     if (interaction.isChatInputCommand()) {
 
-      // TICKET PAINEL
+      // 🎫 TICKET PAINEL
       if (interaction.commandName === "ticket") {
 
         const embed = new EmbedBuilder()
@@ -59,7 +62,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // LOJA
+      // 🛒 LOJA
       if (interaction.commandName === "loja") {
 
         let lista = produtos.produtos
@@ -72,7 +75,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // COMPRAR (simples)
+      // 💰 COMPRA SIMPLES
       if (interaction.commandName === "comprar") {
 
         const item = produtos.produtos[0];
@@ -83,12 +86,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
     }
 
+    // =========================
     // BOTÕES
+    // =========================
     if (interaction.isButton()) {
 
       if (!interaction.guild) return;
 
-      // ABRIR TICKET
+      // 🎫 ABRIR TICKET
       if (interaction.customId === "open_ticket") {
 
         const channel = await interaction.guild.channels.create({
@@ -128,7 +133,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // FECHAR TICKET
+      // 🔒 FECHAR TICKET
       if (interaction.customId === "close_ticket") {
 
         await interaction.reply("🔒 Fechando ticket...");
