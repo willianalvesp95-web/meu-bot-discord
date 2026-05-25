@@ -6,8 +6,12 @@ const commands = [
     .setDescription("Abrir painel de ticket"),
 
   new SlashCommandBuilder()
+    .setName("loja")
+    .setDescription("Ver loja"),
+
+  new SlashCommandBuilder()
     .setName("comprar")
-    .setDescription("Abrir loja")
+    .setDescription("Comprar item")
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
@@ -21,7 +25,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
       { body: commands }
     );
 
-    console.log("Comandos registrados com sucesso!");
+    console.log("Comandos registrados!");
   } catch (err) {
     console.error(err);
   }
