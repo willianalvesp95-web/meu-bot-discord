@@ -18,16 +18,18 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
+const produtos = require("./productos.json");
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// BOT LIGADO
+// BOT ONLINE
 client.once("ready", () => {
   console.log(`Bot ligado: ${client.user.tag}`);
 });
 
-// INTERAÇÕES (COMANDOS + BOTÕES)
+// INTERAÇÕES
 client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
@@ -35,6 +37,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // SLASH COMMANDS
     if (interaction.isChatInputCommand()) {
 
+      // TICKET PAINEL
       if (interaction.commandName === "ticket") {
 
         const embed = new EmbedBuilder()
@@ -49,15 +52,34 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .setStyle(ButtonStyle.Primary)
         );
 
-        return await interaction.reply({
+        return interaction.reply({
           embeds: [embed],
           components: [row],
           ephemeral: false
         });
       }
 
+      // LOJA
+      if (interaction.commandName === "loja") {
+
+        let lista = produtos.produtos
+          .map(p => `🛒 **${p.nome}** - R$${p.preco}`)
+          .join("\n");
+
+        return interaction.reply({
+          content: `📦 **LOJA:**\n\n${lista}`,
+          ephemeral: false
+        });
+      }
+
+      // COMPRAR (simples)
       if (interaction.commandName === "comprar") {
-        return await interaction.reply("💰 Loja aberta!");
+
+        const item = produtos.produtos[0];
+
+        return interaction.reply(
+          `💰 Você comprou **${item.nome}** por R$${item.preco}`
+        );
       }
     }
 
@@ -66,7 +88,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       if (!interaction.guild) return;
 
-      // abrir ticket
+      // ABRIR TICKET
       if (interaction.customId === "open_ticket") {
 
         const channel = await interaction.guild.channels.create({
@@ -106,7 +128,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // fechar ticket
+      // FECHAR TICKET
       if (interaction.customId === "close_ticket") {
 
         await interaction.reply("🔒 Fechando ticket...");
@@ -118,7 +140,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
   } catch (err) {
-    console.error("ERRO INTERACTION:", err);
+    console.error("ERRO:", err);
 
     if (!interaction.replied) {
       await interaction.reply({
@@ -131,8 +153,4 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // LOGIN
-if (!process.env.DISCORD_TOKEN) {
-  console.error("TOKEN NÃO DEFINIDO");
-} else {
-  client.login(process.env.DISCORD_TOKEN);
-}
+client.login(process.env.DISCORD_TOKEN);
