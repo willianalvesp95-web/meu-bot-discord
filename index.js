@@ -10,20 +10,19 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  EmbedBuilder
+  EmbedBuilder,
+  ChannelType,
+  PermissionFlagsBits
 } = require("discord.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// Seu ID
 const ADMIN_ID = "1408931267747123303";
 
-// Carregar produtos
 let produtos = require("./products.json");
 
-// Salvar produtos
 function salvarProdutos() {
   fs.writeFileSync(
     "./products.json",
@@ -42,20 +41,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // COMANDOS
     if (interaction.isChatInputCommand()) {
 
-      // /painel
+      // PAINEL
       if (interaction.commandName === "painel") {
 
         if (interaction.user.id !== ADMIN_ID) {
           return interaction.reply({
-            content: "❌ Sem permissão.",
+            content: "❌ Sem permissão",
             ephemeral: true
           });
         }
 
         const embed = new EmbedBuilder()
           .setTitle("🛠 Painel Admin")
-          .setDescription("Clique abaixo para criar produto")
-          .setColor(0x00AEFF);
+          .setDescription("Clique no botão abaixo")
+          .setColor("Blue");
 
         const row = new ActionRowBuilder()
           .addComponents(
@@ -72,7 +71,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      // /loja
+      // LOJA
       if (interaction.commandName === "loja") {
 
         if (produtos.produtos.length === 0) {
@@ -82,7 +81,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
 
         let lista = produtos.produtos
-          .map(p => `📦 ${p.nome}\n💰 R$${p.preco}`)
+          .map(
+            p =>
+            `📦 ${p.nome}\n💰 R$${p.preco}`
+          )
           .join("\n\n");
 
         const rows = produtos.produtos.map(p => {
@@ -99,9 +101,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
 
         return interaction.reply({
-          content: `📦 **LOJA**\n\n${lista}`,
+          content: `# 📦 LOJA\n\n${lista}`,
           components: rows
         });
+
       }
 
     }
@@ -109,12 +112,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // BOTÕES
     if (interaction.isButton()) {
 
-      // Criar produto
+      // CRIAR PRODUTO
       if (interaction.customId === "criar_produto") {
 
         if (interaction.user.id !== ADMIN_ID) {
           return interaction.reply({
-            content: "❌ Sem permissão.",
+            content: "❌ Sem permissão",
             ephemeral: true
           });
         }
@@ -125,7 +128,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const nome = new TextInputBuilder()
           .setCustomId("nome")
-          .setLabel("Nome do produto")
+          .setLabel("Nome")
           .setStyle(TextInputStyle.Short);
 
         const preco = new TextInputBuilder()
@@ -139,9 +142,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
         return interaction.showModal(modal);
+
       }
 
-      // Comprar produto
+      // COMPRAR
       if (interaction.customId.startsWith("comprar_")) {
 
         const id = interaction.customId.replace(
@@ -155,24 +159,64 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         if (!produto) {
           return interaction.reply({
-            content: "❌ Produto não encontrado.",
+            content: "❌ Produto não encontrado",
             ephemeral: true
           });
         }
 
-        return interaction.reply({
+        const canal = await interaction.guild.channels.create({
+          name: `ticket-${interaction.user.username}`,
+          type: ChannelType.GuildText,
+
+          permissionOverwrites: [
+
+            {
+              id: interaction.guild.id,
+              deny: [
+                PermissionFlagsBits.ViewChannel
+              ]
+            },
+
+            {
+              id: interaction.user.id,
+              allow: [
+                PermissionFlagsBits.ViewChannel,
+                PermissionFlagsBits.SendMessages
+              ]
+            },
+
+            {
+              id: ADMIN_ID,
+              allow: [
+                PermissionFlagsBits.ViewChannel,
+                PermissionFlagsBits.SendMessages
+              ]
+            }
+
+          ]
+        });
+
+        await canal.send({
           content:
-`🛒 Compra iniciada
+`🎫 **TICKET ABERTO**
+
+👤 Cliente: ${interaction.user}
 
 📦 Produto: ${produto.nome}
-💰 Preço: R$${produto.preco}`,
+
+💰 Preço: R$${produto.preco}`
+        });
+
+        return interaction.reply({
+          content: `✅ Ticket criado: ${canal}`,
           ephemeral: true
         });
+
       }
 
     }
 
-    // FORMULÁRIO
+    // MODAL
     if (interaction.isModalSubmit()) {
 
       if (interaction.customId === "produto_modal") {
@@ -199,12 +243,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 💰 R$${preco}`,
           ephemeral: true
         });
+
       }
 
     }
 
-  } catch (err) {
-    console.error(err);
+  } catch(err) {
+    console.log(err);
   }
 
 });
