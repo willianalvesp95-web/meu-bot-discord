@@ -75,23 +75,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // /loja
       if (interaction.commandName === "loja") {
 
-        let lista = produtos.produtos
-          .map(p => `🛒 **${p.nome}** - R$${p.preco}`)
-          .join("\n");
-
-        if (!lista) {
-          lista = "Nenhum produto criado.";
+        if (produtos.produtos.length === 0) {
+          return interaction.reply({
+            content: "❌ Nenhum produto criado."
+          });
         }
 
+        let lista = produtos.produtos
+          .map(p => `📦 ${p.nome}\n💰 R$${p.preco}`)
+          .join("\n\n");
+
+        const rows = produtos.produtos.map(p => {
+
+          return new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId(`comprar_${p.id}`)
+                .setLabel(`Comprar ${p.nome}`)
+                .setEmoji("🛒")
+                .setStyle(ButtonStyle.Success)
+            );
+
+        });
+
         return interaction.reply({
-          content: `📦 **LOJA**\n\n${lista}`
+          content: `📦 **LOJA**\n\n${lista}`,
+          components: rows
         });
       }
+
     }
 
-    // BOTÃO
+    // BOTÕES
     if (interaction.isButton()) {
 
+      // Criar produto
       if (interaction.customId === "criar_produto") {
 
         if (interaction.user.id !== ADMIN_ID) {
@@ -122,6 +140,36 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         return interaction.showModal(modal);
       }
+
+      // Comprar produto
+      if (interaction.customId.startsWith("comprar_")) {
+
+        const id = interaction.customId.replace(
+          "comprar_",
+          ""
+        );
+
+        const produto = produtos.produtos.find(
+          p => p.id === id
+        );
+
+        if (!produto) {
+          return interaction.reply({
+            content: "❌ Produto não encontrado.",
+            ephemeral: true
+          });
+        }
+
+        return interaction.reply({
+          content:
+`🛒 Compra iniciada
+
+📦 Produto: ${produto.nome}
+💰 Preço: R$${produto.preco}`,
+          ephemeral: true
+        });
+      }
+
     }
 
     // FORMULÁRIO
@@ -137,8 +185,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         produtos.produtos.push({
           id: Date.now().toString(),
-          nome: nome,
-          preco: preco
+          nome,
+          preco
         });
 
         salvarProdutos();
@@ -152,6 +200,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           ephemeral: true
         });
       }
+
     }
 
   } catch (err) {
